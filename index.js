@@ -24,20 +24,22 @@ expire = 3 * 24 * 60 * 60 * 1000;
 
 app.post('/', function (req, res) {
   armored_content = req.body.toString("utf8");
-  process.stdout.write(armored_content);
   log.debug(armored_content);
   pgp_content = openpgp.message.readArmored(armored_content);
 
   openpgp.decryptMessage(pkey, pgp_content).then(function(content) {
+    ok = openpgp.message.readArmored(content);
+    log.debug(ok);
+
     now_date = new Date().getTime();
     available_date = Math.ceil(now_date / batch) * batch;
     log.debug(content);
     log.debug(now_date);
     log.debug(available_date);
     c.zadd(prefix + 'posts', available_date, content);
-    res.send('OK');
+    res.send("OK\n");
   }).catch(function(error) {
-    res.send('ERR');
+    res.send("ERR\n");
   });
 
 });
